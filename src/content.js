@@ -2,12 +2,60 @@ var self
 
 class App {
   constructor() {
-    this.addEvent()
+    this.init()
   }
-  addEvent() {
+  init() {
     document.body.addEventListener('mousemove', function (e) {
-      self.findWord(e.x, e.y)
+      var text = self.findWord(e.x, e.y)
+      console.log(text)
+      if (!text) {
+        return
+      }
+
+      if (self.lastText == text) {
+        return
+      } else {
+        self.lastText = text
+      }
+
+      self.translate(text)
     })
+  }
+  translate(text) {
+    if (text.trim()) {
+
+      var query = 'apple'
+      var from = 'en'
+      var to = 'zh'
+      var appid = '2015063000000001'
+      var salt = '1435660288'
+      var key = '12345678'
+      // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
+      var str1 = appid + query + salt + key
+      var sign = MD5(str1)
+
+      ajax({
+        url: "https://openapi.baidu.com/public/2.0/bmt/translate",
+        url: "https://api.fanyi.baidu.com/api/trans/vip/translate",
+        data: {
+          client_id: "AVhF9A0GExzkU5gCkZ0Gbht7",
+          from: 'auto',
+          to: 'auto',
+          q: text
+        },
+        data: {
+          q: query,
+          appid: appid,
+          salt: salt,
+          from: from,
+          to: to,
+          sign: sign
+        },
+        success(res) {
+          document.title = res.trans_result[0].dst
+        }
+      })
+    }
   }
   findWord(x, y) {
     self.selectionSave()
@@ -55,11 +103,11 @@ class App {
     }
 
 
-    var text = selection.toString()
-    console.log(text)
-
+    var text = selection.toString().trim()
 
     self.selectionRestore()
+
+    return text
   }
   selectionSave() {
     var array = []
