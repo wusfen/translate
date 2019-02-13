@@ -5,57 +5,106 @@ class App {
     this.init()
   }
   init() {
+    var view = document.createElement('div')
+    document.body.appendChild(view)
+    Object.assign(view.style, {
+      position: 'fixed',
+      // background: '#fff',
+      color: '#fff',
+      fontSize: '10px',
+      padding: '0 1ex',
+      borderRadius: '5px',
+      textShadow: '#000 0px 0px 1px, #000 1px 1px 2px',
+      zIndex: 999999999,
+    })
+
     document.body.addEventListener('mousemove', function (e) {
+
+      if (document.activeElement.value !== undefined) {
+        return
+      }
+
       var text = self.findWord(e.x, e.y)
-      console.log(text)
-      if (!text) {
-        return
-      }
 
-      if (self.lastText == text) {
-        return
-      } else {
+      if (text) {
+        Object.assign(view.style, {
+          display: 'block',
+          left: e.x + 10 + 'px',
+          top: e.y + 10 + 'px',
+        })
+
+        if (text == self.lastText) {
+          return
+        }
         self.lastText = text
+
+        self.translate(text, function (rs) {
+          view.innerHTML = text + ': ' + rs
+        })
+      } else {
+        Object.assign(view.style, {
+          display: 'none',
+        })
       }
 
-      self.translate(text)
+
     })
   }
-  translate(text) {
-    if (text.trim()) {
-
-      var query = 'apple'
-      var from = 'en'
-      var to = 'zh'
-      var appid = '2015063000000001'
-      var salt = '1435660288'
-      var key = '12345678'
-      // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
-      var str1 = appid + query + salt + key
-      var sign = MD5(str1)
-
-      ajax({
-        url: "https://openapi.baidu.com/public/2.0/bmt/translate",
-        url: "https://api.fanyi.baidu.com/api/trans/vip/translate",
-        data: {
-          client_id: "AVhF9A0GExzkU5gCkZ0Gbht7",
-          from: 'auto',
-          to: 'auto',
-          q: text
-        },
-        data: {
-          q: query,
-          appid: appid,
-          salt: salt,
-          from: from,
-          to: to,
-          sign: sign
-        },
-        success(res) {
-          document.title = res.trans_result[0].dst
-        }
-      })
+  translate(text, fn) {
+    self.cache = self.cache || {
+      constructor: undefined,
+      hasOwnProperty: undefined,
+      isPrototypeOf: undefined,
+      propertyIsEnumerable: undefined,
+      toLocaleString: undefined,
+      toString: undefined,
+      valueOf: undefined,
     }
+
+    var rs = self.cache[text]
+    if (rs) {
+      fn(rs)
+      return
+    }
+
+    var query = 'apple'
+    var from = 'en'
+    var to = 'zh'
+    var appid = '2015063000000001'
+    var salt = '1435660288'
+    var key = '12345678'
+    // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
+    var str1 = appid + query + salt + key
+    var sign = MD5(str1)
+
+    ajax({
+      url: "https://openapi.baidu.com/public/2.0/bmt/translate",
+      xurl: "https://api.fanyi.baidu.com/api/trans/vip/translate",
+      data: {
+        client_id: "AVhF9A0GExzkU5gCkZ0Gbht7",
+        from: 'auto',
+        to: 'auto',
+        q: text
+      },
+      xdata: {
+        q: query,
+        appid: appid,
+        salt: salt,
+        from: from,
+        to: to,
+        sign: sign
+      },
+      success(res) {
+        if (res.trans_result) {
+          var rs = res.trans_result[0].dst
+          fn(rs)
+          self.cache[text] = rs
+        } else {
+          fn('error')
+        }
+
+      }
+    })
   }
   findWord(x, y) {
     self.selectionSave()
@@ -80,7 +129,7 @@ class App {
         range.setStart(node, startOffset)
 
         // 遇到非英文回退
-        if (String(selection).match(/[^a-zA-Z_-]/)) {
+        if (String(selection).match(/[^a-zA-Z]/)) {
           range.setStart(node, ++startOffset)
           break
         }
@@ -95,7 +144,7 @@ class App {
         range.setEnd(node, endOffset)
 
         // 遇到非英文回退
-        if (String(selection).match(/[^a-zA-Z_-]/)) {
+        if (String(selection).match(/[^a-zA-Z]/)) {
           range.setEnd(node, --endOffset)
           break
         }
@@ -104,6 +153,8 @@ class App {
 
 
     var text = selection.toString().trim()
+
+    text = text.replace(/([a-z])([A-Z])/g, '$1 $2')
 
     self.selectionRestore()
 
