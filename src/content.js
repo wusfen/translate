@@ -9,7 +9,7 @@ class App {
     document.body.appendChild(view)
     Object.assign(view.style, {
       position: 'fixed',
-      // background: '#fff',
+      background: 'rgba(255, 255, 255, 0.2)',
       color: '#fff',
       fontSize: '10px',
       padding: '0 1ex',
