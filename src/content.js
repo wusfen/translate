@@ -2,9 +2,13 @@ var self
 
 class App {
   constructor() {
+
     this.init()
+
   }
+
   init() {
+
     var view = document.createElement('div')
     document.body.appendChild(view)
     Object.assign(view.style, {
@@ -27,6 +31,7 @@ class App {
       var text = self.findWord(e.x, e.y)
 
       if (text) {
+
         Object.assign(view.style, {
           display: 'block',
           left: e.x + 10 + 'px',
@@ -41,16 +46,20 @@ class App {
         self.translate(text, function (rs) {
           view.innerHTML = text + ': ' + rs
         })
+
       } else {
+
         Object.assign(view.style, {
           display: 'none',
         })
-      }
 
+      }
 
     })
   }
+
   translate(text, fn) {
+
     self.cache = self.cache || {
       constructor: undefined,
       hasOwnProperty: undefined,
@@ -67,26 +76,19 @@ class App {
       return
     }
 
-    var query = 'apple'
-    var from = 'en'
-    var to = 'zh'
-    var appid = '2015063000000001'
+    var query = text
+    var from = 'auto'
+    var to = 'auto'
+    var appid = '20160522000021670'
     var salt = '1435660288'
-    var key = '12345678'
+    var key = 'kAh1z5mKLPRRZ4DfTlrq'
     // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
     var str1 = appid + query + salt + key
     var sign = MD5(str1)
 
     ajax({
-      url: "https://openapi.baidu.com/public/2.0/bmt/translate",
-      xurl: "https://api.fanyi.baidu.com/api/trans/vip/translate",
+      url: "https://fanyi-api.baidu.com/api/trans/vip/translate",
       data: {
-        client_id: "AVhF9A0GExzkU5gCkZ0Gbht7",
-        from: 'auto',
-        to: 'auto',
-        q: text
-      },
-      xdata: {
         q: query,
         appid: appid,
         salt: salt,
@@ -95,18 +97,25 @@ class App {
         sign: sign
       },
       success(res) {
+
         if (res.trans_result) {
+
           var rs = res.trans_result[0].dst
           fn(rs)
           self.cache[text] = rs
+
         } else {
+
           fn('error')
+
         }
 
       }
     })
   }
+
   findWord(x, y) {
+
     self.selectionSave()
     var selection = document.getSelection()
 
@@ -119,8 +128,10 @@ class App {
 
     // 文本节点扩展选区
     if (node.nodeValue) {
+
       // 左边扩选
       while (true) {
+
         startOffset -= 1
         if (startOffset < 0) {
           break
@@ -133,9 +144,12 @@ class App {
           range.setStart(node, ++startOffset)
           break
         }
+
       }
+
       // 右边扩选
       while (true) {
+
         endOffset += 1
         if (endOffset > node.nodeValue.length) {
           break
@@ -148,6 +162,7 @@ class App {
           range.setEnd(node, --endOffset)
           break
         }
+
       }
     }
 
@@ -160,7 +175,9 @@ class App {
 
     return text
   }
+
   selectionSave() {
+
     var array = []
     var selection = document.getSelection()
     var rangeCount = selection.rangeCount
@@ -170,8 +187,11 @@ class App {
     }
     this._selectionRanges = array
     selection.removeAllRanges()
+
   }
+
   selectionRestore() {
+
     var array = this._selectionRanges
     var selection = document.getSelection()
     selection.removeAllRanges()
@@ -179,6 +199,7 @@ class App {
       var range = array[i]
       selection.addRange(range)
     }
+
   }
 }
 
